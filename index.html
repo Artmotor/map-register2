@@ -6,7 +6,6 @@
     <title>Гео-шлюз | Умная гео-привязка для регистрации</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -108,6 +107,7 @@
             padding: 10px 24px;
             font-weight: 500;
             color: #1e293b;
+            cursor: pointer;
         }
         .nav-pills-custom .nav-link.active {
             background: linear-gradient(95deg, #1e3a5f, #2563eb);
@@ -266,7 +266,7 @@
         </div>
     </div>
 
-    <!-- Модалки -->
+    <!-- Модалка редактирования -->
     <div id="editModal" class="modal fade" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
             <div class="modal-header bg-dark text-white"><h5><i class="bi bi-pencil-square"></i> Редактировать зону</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
@@ -282,10 +282,11 @@
         </div></div>
     </div>
 
+    <!-- Модалка QR-кода -->
     <div id="qrModal" class="modal fade" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
             <div class="modal-header bg-dark text-white"><h5><i class="bi bi-qr-code"></i> QR-код доступа</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body text-center"><div id="qrContainer" class="qr-container d-inline-block"></div><div id="qrZoneName" class="fw-bold mt-3"></div><div id="qrZoneUrl" class="small text-muted mt-2 word-break-all"></div><button id="downloadQrBtn" class="btn btn-gradient mt-3"><i class="bi bi-download"></i> Скачать PNG</button></div>
+            <div class="modal-body text-center"><div id="qrContainer" class="qr-container d-inline-block" style="min-height: 280px;"></div><div id="qrZoneName" class="fw-bold mt-3"></div><div id="qrZoneUrl" class="small text-muted mt-2 word-break-all"></div><button id="downloadQrBtn" class="btn btn-gradient mt-3"><i class="bi bi-download"></i> Скачать PNG</button></div>
         </div></div>
     </div>
 
@@ -293,6 +294,9 @@
         <button id="openAdminCabBtn" class="admin-btn"><i class="bi bi-person-badge me-2"></i>Личный кабинет</button>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -313,7 +317,6 @@ const db = getFirestore(app);
 
 let currentUser = null;
 let currentZoneForCheck = null;
-let redirectTimer = null;
 
 // DOM elements
 const authScreen = document.getElementById('authScreen');
@@ -353,7 +356,7 @@ async function renderZones() {
                     <div class="mt-3 d-flex flex-wrap gap-2">
                         <button class="btn btn-sm btn-outline-primary btn-show-qr" data-id="${zone.id}"><i class="bi bi-qr-code"></i> QR</button>
                         <button class="btn btn-sm btn-outline-secondary btn-copy-link" data-url="${zone.accessUrl}"><i class="bi bi-link"></i> Копировать</button>
-                        <button class="btn btn-sm btn-warning btn-edit" data-id="${zone.id}"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-warning btn-edit" data-id="${zone.id}"><i class="bi bi-pencil"></i> Редактировать</button>
                         <button class="btn btn-sm btn-danger btn-delete" data-id="${zone.id}"><i class="bi bi-trash"></i></button>
                         <button class="btn btn-sm btn-secondary btn-toggle" data-id="${zone.id}" data-active="${zone.active}"><i class="bi ${zone.active ? 'bi-pause-circle' : 'bi-play-circle'}"></i></button>
                     </div>
@@ -362,14 +365,99 @@ async function renderZones() {
         `;
     }
     container.innerHTML = html;
-    
-    // attach events
-    document.querySelectorAll('.btn-show-qr').forEach(btn => btn.addEventListener('click', () => showQR(btn.dataset.id)));
-    document.querySelectorAll('.btn-copy-link').forEach(btn => btn.addEventListener('click', () => copyToClipboard(btn.dataset.url)));
-    document.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', () => editZone(btn.dataset.id)));
-    document.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', () => deleteZoneById(btn.dataset.id)));
-    document.querySelectorAll('.btn-toggle').forEach(btn => btn.addEventListener('click', () => toggleZone(btn.dataset.id, btn.dataset.active === 'false')));
 }
+
+// Глобальные функции для обработчиков событий (чтобы были доступны из onclick)
+window.handleShowQR = async function(zoneId) {
+    const zones = await loadZones();
+    const zone = zones.find(z => z.id === zoneId);
+    if(zone && zone.accessUrl) {
+        const container = document.getElementById('qrContainer');
+        container.innerHTML = '';
+        // Инициализируем QR код
+        try {
+            new QRCode(container, {
+                text: zone.accessUrl,
+                width: 240,
+                height: 240,
+                colorDark: "#1e3a5f",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            document.getElementById('qrZoneName').innerText = zone.name;
+            document.getElementById('qrZoneUrl').innerText = zone.accessUrl;
+            const modal = new bootstrap.Modal(document.getElementById('qrModal'));
+            modal.show();
+        } catch(e) {
+            console.error('QR Error:', e);
+            alert('Ошибка генерации QR-кода');
+        }
+    } else {
+        alert('Не удалось получить ссылку для QR');
+    }
+};
+
+window.handleCopyLink = function(url) {
+    navigator.clipboard.writeText(url);
+    const toast = document.createElement('div');
+    toast.className = 'copy-toast';
+    toast.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Ссылка скопирована';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+};
+
+window.handleEditZone = async function(zoneId) {
+    const zones = await loadZones();
+    const zone = zones.find(z => z.id === zoneId);
+    if(zone) {
+        document.getElementById('editZoneId').value = zone.id;
+        document.getElementById('editName').value = zone.name;
+        document.getElementById('editLat').value = zone.lat;
+        document.getElementById('editLng').value = zone.lng;
+        document.getElementById('editRadius').value = zone.radius;
+        document.getElementById('editTargetUrl').value = zone.targetFormUrl;
+        document.getElementById('editDescription').value = zone.description || '';
+        document.getElementById('editActive').value = zone.active ? 'true' : 'false';
+        const modal = new bootstrap.Modal(document.getElementById('editModal'));
+        modal.show();
+    }
+};
+
+window.handleDeleteZone = async function(zoneId) {
+    if(!confirm('Удалить зону? Это действие необратимо.')) return;
+    await deleteDoc(doc(db, 'zones', zoneId));
+    await renderZones();
+    alert('Зона удалена');
+};
+
+window.handleToggleZone = async function(zoneId, currentActive) {
+    await updateDoc(doc(db, 'zones', zoneId), { active: !currentActive, updatedAt: Timestamp.now() });
+    await renderZones();
+};
+
+// Навешиваем обработчики через делегирование (более надежный способ)
+document.getElementById('zonesListContainer')?.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    
+    if(btn.classList.contains('btn-show-qr')) {
+        const zoneId = btn.getAttribute('data-id');
+        await window.handleShowQR(zoneId);
+    } else if(btn.classList.contains('btn-copy-link')) {
+        const url = btn.getAttribute('data-url');
+        window.handleCopyLink(url);
+    } else if(btn.classList.contains('btn-edit')) {
+        const zoneId = btn.getAttribute('data-id');
+        await window.handleEditZone(zoneId);
+    } else if(btn.classList.contains('btn-delete')) {
+        const zoneId = btn.getAttribute('data-id');
+        await window.handleDeleteZone(zoneId);
+    } else if(btn.classList.contains('btn-toggle')) {
+        const zoneId = btn.getAttribute('data-id');
+        const isActive = btn.getAttribute('data-active') === 'true';
+        await window.handleToggleZone(zoneId, isActive);
+    }
+});
 
 async function createNewZone(data) {
     if(!currentUser) return null;
@@ -383,16 +471,6 @@ async function createNewZone(data) {
     };
     const docRef = await addDoc(collection(db, 'zones'), zone);
     return { id: docRef.id, ...zone };
-}
-
-async function updateZoneData(id, data) {
-    await updateDoc(doc(db, 'zones', id), { ...data, updatedAt: Timestamp.now() });
-}
-
-async function deleteZoneData(id) {
-    if(!confirm('Удалить зону? Это действие необратимо.')) return false;
-    await deleteDoc(doc(db, 'zones', id));
-    return true;
 }
 
 async function getZoneBySlug(slug) {
@@ -443,12 +521,9 @@ function startGeoCheck() {
             const dist = distance(pos.coords.latitude, pos.coords.longitude, currentZoneForCheck.lat, currentZoneForCheck.lng);
             if(dist <= currentZoneForCheck.radius) {
                 setStatus('success', `✅ Доступ разрешён! Расстояние: ${Math.round(dist)} м`);
-                // Увеличиваем счетчик успешных проверок
                 incrementStats(currentZoneForCheck.id, 'success');
-                // Скрываем кнопку и показываем блок успеха
                 document.getElementById('checkGeoBtn').style.display = 'none';
                 document.getElementById('checkSuccessBlock').classList.remove('hidden');
-                // ТАЙМЕР НА ПЕРЕХОД
                 setTimeout(() => {
                     window.location.href = currentZoneForCheck.targetFormUrl;
                 }, 1500);
@@ -487,9 +562,7 @@ async function handleZoneUrl() {
             floatingAdminBtn.style.display = 'none';
             document.getElementById('checkZoneName').innerText = zone.name;
             document.getElementById('checkZoneDescription').innerText = zone.description || '';
-            // Увеличиваем счетчик посещений
             await incrementStats(zone.id, 'visit');
-            // Автоматически запускаем проверку через небольшую задержку
             setTimeout(() => startGeoCheck(), 500);
         } else if(zone && !zone.active) {
             currentZoneForCheck = null;
@@ -510,69 +583,7 @@ async function handleZoneUrl() {
     }
 }
 
-// UI Helpers
 function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m) { if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;'; return m; }); }
-
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text);
-    const toast = document.createElement('div');
-    toast.className = 'copy-toast';
-    toast.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Ссылка скопирована';
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
-}
-
-async function showQR(zoneId) {
-    const zones = await loadZones();
-    const zone = zones.find(z => z.id === zoneId);
-    if(zone && zone.accessUrl) {
-        const container = document.getElementById('qrContainer');
-        container.innerHTML = ''; // очищаем
-        // Создаём QR код
-        new QRCode(container, {
-            text: zone.accessUrl,
-            width: 240,
-            height: 240,
-            colorDark: "#1e3a5f",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
-        document.getElementById('qrZoneName').innerText = zone.name;
-        document.getElementById('qrZoneUrl').innerText = zone.accessUrl;
-        const modal = new bootstrap.Modal(document.getElementById('qrModal'));
-        modal.show();
-    } else {
-        alert('Ошибка генерации QR');
-    }
-}
-
-async function editZone(id) {
-    const zones = await loadZones();
-    const zone = zones.find(z => z.id === id);
-    if(zone) {
-        document.getElementById('editZoneId').value = zone.id;
-        document.getElementById('editName').value = zone.name;
-        document.getElementById('editLat').value = zone.lat;
-        document.getElementById('editLng').value = zone.lng;
-        document.getElementById('editRadius').value = zone.radius;
-        document.getElementById('editTargetUrl').value = zone.targetFormUrl;
-        document.getElementById('editDescription').value = zone.description || '';
-        document.getElementById('editActive').value = zone.active ? 'true' : 'false';
-        new bootstrap.Modal(document.getElementById('editModal')).show();
-    }
-}
-
-async function deleteZoneById(id) {
-    if(await deleteZoneData(id)) {
-        await renderZones();
-        alert('Зона удалена');
-    }
-}
-
-async function toggleZone(id, newStatus) {
-    await updateZoneData(id, { active: newStatus });
-    await renderZones();
-}
 
 // Event listeners
 document.getElementById('registerBtn')?.addEventListener('click', async () => {
@@ -625,14 +636,15 @@ document.getElementById('createZoneForm')?.addEventListener('submit', async (e) 
 
 document.getElementById('saveEditBtn')?.addEventListener('click', async () => {
     const id = document.getElementById('editZoneId').value;
-    await updateZoneData(id, {
+    await updateDoc(doc(db, 'zones', id), {
         name: document.getElementById('editName').value,
         lat: parseFloat(document.getElementById('editLat').value),
         lng: parseFloat(document.getElementById('editLng').value),
         radius: parseInt(document.getElementById('editRadius').value),
         targetFormUrl: document.getElementById('editTargetUrl').value,
         description: document.getElementById('editDescription').value,
-        active: document.getElementById('editActive').value === 'true'
+        active: document.getElementById('editActive').value === 'true',
+        updatedAt: Timestamp.now()
     });
     bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
     await renderZones();
@@ -646,6 +658,8 @@ document.getElementById('downloadQrBtn')?.addEventListener('click', () => {
         link.download = `QR_${document.getElementById('qrZoneName').innerText}.png`;
         link.href = canvas.toDataURL();
         link.click();
+    } else {
+        alert('QR-код еще не сгенерирован');
     }
 });
 
