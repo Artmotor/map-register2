@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Гео-регистрация | Личный кабинет</title>
+    <title>Гео-шлюз | Создание ссылок и QR-кодов</title>
     <style>
         * {
             margin: 0;
@@ -133,6 +133,11 @@
             color: white;
         }
 
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
         .btn-sm {
             padding: 8px 16px;
             font-size: 13px;
@@ -173,41 +178,6 @@
             background: #cce5ff;
             color: #004085;
             border: 1px solid #b8daff;
-        }
-
-        /* Навигация */
-        .nav-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #e0e0e0;
-            padding-bottom: 10px;
-            flex-wrap: wrap;
-        }
-
-        .nav-tab {
-            padding: 10px 20px;
-            background: none;
-            border: none;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            color: #666;
-        }
-
-        .nav-tab.active {
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-            color: white;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
         }
 
         /* Таблица зон */
@@ -323,6 +293,10 @@
             margin: 10px 0;
         }
 
+        .qr-canvas {
+            margin: 0 auto;
+        }
+
         /* Аватар и пользователь */
         .user-info {
             display: flex;
@@ -335,35 +309,46 @@
         }
 
         .user-avatar {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
+            font-size: 24px;
             color: white;
         }
 
-        .user-details h3 {
-            margin-bottom: 5px;
+        .user-details h4 {
+            margin-bottom: 4px;
             color: #333;
         }
 
         .user-details p {
             color: #666;
-            font-size: 14px;
+            font-size: 12px;
         }
 
-        /* Пользовательский режим */
-        .user-mode {
+        /* Пользовательский режим - страница проверки */
+        .check-page {
             text-align: center;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .location-icon {
             font-size: 64px;
             margin-bottom: 15px;
+        }
+
+        .zone-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin: 15px 0;
         }
 
         .loading-spinner {
@@ -393,48 +378,46 @@
             font-size: 12px;
         }
 
-        .zones-info {
+        /* Ссылка и QR */
+        .link-card {
             background: #f8f9fa;
-            border-radius: 12px;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .link-card input {
+            font-family: monospace;
+            font-size: 12px;
+            background: white;
+        }
+
+        .qr-preview {
+            background: white;
             padding: 15px;
-            margin-top: 15px;
-            font-size: 13px;
-            text-align: left;
+            border-radius: 16px;
+            display: inline-block;
+            margin: 10px 0;
         }
 
-        .zones-info h4 {
-            margin-bottom: 10px;
-            color: #333;
-        }
-
-        .zones-info ul {
-            margin-left: 20px;
-            color: #666;
-        }
-
-        /* Админ-бейдж */
-        .admin-badge {
+        .copy-success {
             position: fixed;
             bottom: 20px;
-            right: 20px;
-            z-index: 100;
-        }
-
-        .admin-btn {
-            background: #333;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #28a745;
             color: white;
-            border: none;
+            padding: 10px 20px;
             border-radius: 50px;
-            padding: 12px 20px;
-            cursor: pointer;
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
+            z-index: 1000;
+            animation: fadeOut 2s ease;
         }
 
-        .admin-btn:hover {
-            background: #555;
-            transform: scale(1.05);
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; }
         }
 
         @media (max-width: 768px) {
@@ -451,31 +434,27 @@
             }
         }
     </style>
+    <!-- QRCode библиотека -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <!-- Firebase SDK -->
     <script type="module">
-        // Импорт Firebase (будет вставлен после настройки)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
         // ====================================================
         // НАСТРОЙКА FIREBASE - ЗАМЕНИТЕ НА ВАШИ ДАННЫЕ!
         // ====================================================
-        // 1. Перейдите на https://console.firebase.google.com/
-        // 2. Создайте проект
-        // 3. Добавьте веб-приложение
-        // 4. Скопируйте конфигурацию сюда:
-        
         const firebaseConfig = {
-    apiKey: "AIzaSyBnIqsF87sX2AWbGCFT7dq2PmawbjbKp7M",
+            apiKey: "AIzaSyBnIqsF87sX2AWbGCFT7dq2PmawbjbKp7M",
     authDomain: "geo-registration.firebaseapp.com",
     projectId: "geo-registration",
     storageBucket: "geo-registration.firebasestorage.app",
     messagingSenderId: "427820087807",
     appId: "1:427820087807:web:aca9d4012f770b58998fca"
-  };
-      
-        // Инициализация Firebase
+        };
+        
+        // Инициализация
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -484,11 +463,11 @@
         // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
         // ====================================================
         let currentUser = null;
-        let zones = [];
+        let currentZoneForCheck = null;
         
         // DOM элементы
         const authScreen = document.getElementById('authScreen');
-        const userModeScreen = document.getElementById('userModeScreen');
+        const checkPage = document.getElementById('checkPage');
         const adminPanel = document.getElementById('adminPanel');
         const userInfo = document.getElementById('userInfo');
         const userNameSpan = document.getElementById('userName');
@@ -497,8 +476,6 @@
         // ====================================================
         // АВТОРИЗАЦИЯ
         // ====================================================
-        
-        // Регистрация
         async function register() {
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
@@ -522,15 +499,12 @@
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 await updateProfile(userCredential.user, { displayName: name });
-                
-                // Создаем документ пользователя в Firestore
                 await setDoc(doc(db, 'users', userCredential.user.uid), {
                     name: name,
                     email: email,
                     createdAt: new Date().toISOString(),
-                    role: 'user' // 'admin' или 'user'
+                    role: 'admin'
                 });
-                
                 console.log('Регистрация успешна');
             } catch (error) {
                 errorDiv.textContent = getAuthErrorMessage(error.code);
@@ -538,7 +512,6 @@
             }
         }
         
-        // Вход
         async function login() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
@@ -561,17 +534,15 @@
             }
         }
         
-        // Выход
         async function logout() {
             try {
                 await signOut(auth);
-                console.log('Выход выполнен');
+                hideAdminPanel();
             } catch (error) {
                 console.error('Ошибка выхода:', error);
             }
         }
         
-        // Обработка сообщений об ошибках
         function getAuthErrorMessage(code) {
             const messages = {
                 'auth/email-already-in-use': 'Этот email уже зарегистрирован',
@@ -588,19 +559,62 @@
         // РАБОТА С ЗОНАМИ В FIRESTORE
         // ====================================================
         
-        // Загрузка зон пользователя
+        async function createZone(zoneData) {
+            if (!currentUser) return null;
+            
+            // Генерируем уникальный slug для ссылки
+            const baseSlug = zoneData.name
+                .toLowerCase()
+                .replace(/[^a-zа-яё0-9]/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+            const slug = `${baseSlug}_${Date.now()}`;
+            
+            // Создаем ссылку на страницу проверки
+            const accessUrl = `${window.location.origin}${window.location.pathname}?zone=${slug}`;
+            
+            const newZone = {
+                name: zoneData.name,
+                slug: slug,
+                lat: parseFloat(zoneData.lat),
+                lng: parseFloat(zoneData.lng),
+                radius: parseInt(zoneData.radius),
+                targetFormUrl: zoneData.targetFormUrl,
+                description: zoneData.description || '',
+                active: true,
+                accessUrl: accessUrl,
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+                visits: 0,
+                successfulChecks: 0
+            };
+            
+            try {
+                const zonesRef = collection(db, 'zones');
+                const docRef = await addDoc(zonesRef, {
+                    ...newZone,
+                    userId: currentUser.uid
+                });
+                newZone.id = docRef.id;
+                return newZone;
+            } catch (error) {
+                console.error('Ошибка создания зоны:', error);
+                alert('Ошибка сохранения зоны');
+                return null;
+            }
+        }
+        
         async function loadUserZones() {
             if (!currentUser) return [];
             
             try {
-                const zonesRef = collection(db, 'users', currentUser.uid, 'zones');
-                const zonesSnapshot = await getDocs(zonesRef);
+                const zonesRef = collection(db, 'zones');
+                const q = query(zonesRef, where('userId', '==', currentUser.uid));
+                const zonesSnapshot = await getDocs(q);
                 const userZones = [];
                 zonesSnapshot.forEach(doc => {
                     userZones.push({ id: doc.id, ...doc.data() });
                 });
-                zones = userZones;
-                renderZonesList();
                 return userZones;
             } catch (error) {
                 console.error('Ошибка загрузки зон:', error);
@@ -608,52 +622,15 @@
             }
         }
         
-        // Добавление зоны
-        async function addZone(zoneData) {
-            if (!currentUser) return;
-            
-            const newZone = {
-                name: zoneData.name,
-                lat: parseFloat(zoneData.lat),
-                lng: parseFloat(zoneData.lng),
-                radius: parseInt(zoneData.radius),
-                formUrl: zoneData.formUrl,
-                description: zoneData.description || '',
-                active: zoneData.active === 'true' || zoneData.active === true,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
-            
-            try {
-                const zonesRef = collection(db, 'users', currentUser.uid, 'zones');
-                const docRef = doc(zonesRef);
-                newZone.id = docRef.id;
-                await setDoc(docRef, newZone);
-                zones.push(newZone);
-                renderZonesList();
-                return newZone;
-            } catch (error) {
-                console.error('Ошибка добавления зоны:', error);
-                alert('Ошибка сохранения зоны');
-            }
-        }
-        
-        // Обновление зоны
         async function updateZone(zoneId, updatedData) {
             if (!currentUser) return;
             
             try {
-                const zoneRef = doc(db, 'users', currentUser.uid, 'zones', zoneId);
+                const zoneRef = doc(db, 'zones', zoneId);
                 await updateDoc(zoneRef, {
                     ...updatedData,
-                    updatedAt: new Date().toISOString()
+                    updatedAt: Timestamp.now()
                 });
-                
-                const index = zones.findIndex(z => z.id === zoneId);
-                if (index !== -1) {
-                    zones[index] = { ...zones[index], ...updatedData };
-                    renderZonesList();
-                }
                 return true;
             } catch (error) {
                 console.error('Ошибка обновления зоны:', error);
@@ -661,106 +638,61 @@
             }
         }
         
-        // Удаление зоны
         async function deleteZone(zoneId) {
             if (!currentUser) return;
-            
             if (!confirm('Удалить эту зону?')) return;
             
             try {
-                const zoneRef = doc(db, 'users', currentUser.uid, 'zones', zoneId);
+                const zoneRef = doc(db, 'zones', zoneId);
                 await deleteDoc(zoneRef);
-                zones = zones.filter(z => z.id !== zoneId);
-                renderZonesList();
-                showUserZonesInfo();
+                return true;
             } catch (error) {
                 console.error('Ошибка удаления зоны:', error);
                 alert('Ошибка удаления зоны');
             }
         }
         
-        // Переключение статуса зоны
-        async function toggleZoneStatus(zoneId) {
-            const zone = zones.find(z => z.id === zoneId);
-            if (zone) {
-                await updateZone(zoneId, { active: zone.active === false ? true : false });
-            }
-        }
-        
-        // ====================================================
-        // ОТОБРАЖЕНИЕ
-        // ====================================================
-        
-        function renderZonesList() {
-            const container = document.getElementById('zonesListContainer');
-            if (!container) return;
-            
-            if (zones.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #888;">Нет созданных зон. Создайте первую!</p>';
-                return;
-            }
-            
-            let html = `
-                <table class="zones-table">
-                    <thead>
-                        <tr><th>Название</th><th>Координаты</th><th>Радиус</th><th>Статус</th><th>QR</th><th>Действия</th></tr>
-                    </thead>
-                    <tbody>
-            `;
-            
-            zones.forEach(zone => {
-                html += `
-                    <tr>
-                        <td>
-                            <strong>${escapeHtml(zone.name)}</strong>
-                            ${zone.description ? `<br><small style="color:#888;">${escapeHtml(zone.description).substring(0, 40)}</small>` : ''}
-                        </td>
-                        <td>${zone.lat}, ${zone.lng}</td>
-                        <td>${zone.radius} м</td>
-                        <td><span class="badge ${zone.active !== false ? 'badge-active' : 'badge-inactive'}">${zone.active !== false ? 'Активна' : 'Неактивна'}</span></td>
-                        <td><button class="btn-sm" style="background:#17a2b8;color:white;" onclick="window.showQRForZone('${zone.id}')">📱 QR</button></td>
-                        <td class="zone-actions">
-                            <button class="btn-sm" style="background:#d4edda;color:#155724;" onclick="window.editZone('${zone.id}')">✏️</button>
-                            <button class="btn-sm" style="background:#f8d7da;color:#721c24;" onclick="window.deleteZone('${zone.id}')">🗑️</button>
-                            <button class="btn-sm" style="background:#cce5ff;color:#004085;" onclick="window.toggleZoneStatus('${zone.id}')">🔘</button>
-                            <button class="btn-sm" style="background:#fff3cd;color:#856404;" onclick="window.copyZoneLink('${zone.id}')">🔗</button>
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            html += '</tbody></tr>';
-            container.innerHTML = html;
-        }
-        
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        function showUserZonesInfo() {
-            const infoDiv = document.getElementById('userZonesInfo');
-            if (infoDiv && zones.length > 0) {
-                const activeZones = zones.filter(z => z.active !== false);
-                if (activeZones.length > 0) {
-                    let html = '<h4>📍 Разрешенные зоны регистрации:</h4><ul>';
-                    activeZones.forEach(zone => {
-                        html += `<li>${escapeHtml(zone.name)} (радиус ${zone.radius} м)</li>`;
-                    });
-                    html += '</ul>';
-                    infoDiv.innerHTML = html;
-                } else {
-                    infoDiv.innerHTML = '<p style="color: #888;">Нет активных зон регистрации</p>';
+        async function incrementZoneStats(zoneId, type) {
+            try {
+                const zoneRef = doc(db, 'zones', zoneId);
+                const zoneDoc = await getDoc(zoneRef);
+                if (zoneDoc.exists()) {
+                    const currentData = zoneDoc.data();
+                    const updateData = {};
+                    if (type === 'visit') {
+                        updateData.visits = (currentData.visits || 0) + 1;
+                    } else if (type === 'success') {
+                        updateData.successfulChecks = (currentData.successfulChecks || 0) + 1;
+                    }
+                    await updateDoc(zoneRef, updateData);
                 }
+            } catch (error) {
+                console.error('Ошибка обновления статистики:', error);
             }
         }
         
         // ====================================================
-        // ГЕО-ФУНКЦИИ
+        // ПОЛУЧЕНИЕ ЗОНЫ ПО SLUG
         // ====================================================
+        async function getZoneBySlug(slug) {
+            try {
+                const zonesRef = collection(db, 'zones');
+                const q = query(zonesRef, where('slug', '==', slug));
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    const doc = querySnapshot.docs[0];
+                    return { id: doc.id, ...doc.data() };
+                }
+                return null;
+            } catch (error) {
+                console.error('Ошибка поиска зоны:', error);
+                return null;
+            }
+        }
         
+        // ====================================================
+        // ГЕО-ФУНКЦИИ ДЛЯ СТРАНИЦЫ ПРОВЕРКИ
+        // ====================================================
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371e3;
             const φ1 = lat1 * Math.PI / 180;
@@ -774,136 +706,184 @@
             return R * c;
         }
         
-        function findMatchingZone(userLat, userLng) {
-            const activeZones = zones.filter(z => z.active !== false);
-            let bestMatch = null;
-            let minDistance = Infinity;
-            
-            for (const zone of activeZones) {
-                const distance = calculateDistance(userLat, userLng, zone.lat, zone.lng);
-                if (distance <= zone.radius && distance < minDistance) {
-                    minDistance = distance;
-                    bestMatch = { zone, distance };
-                }
-            }
-            return bestMatch;
-        }
+        let checkInProgress = false;
         
-        function getZoneUrl(zoneId) {
-            const url = new URL(window.location.href);
-            url.searchParams.set('zone', zoneId);
-            url.hash = '';
-            return url.toString();
-        }
-        
-        // Проверка местоположения пользователя
-        let userCheckInProgress = false;
-        
-        function updateUserStatus(type, message) {
-            const statusDiv = document.getElementById('userStatusMessage');
+        function updateCheckStatus(type, message) {
+            const statusDiv = document.getElementById('checkStatusMessage');
             if (statusDiv) {
                 statusDiv.innerHTML = message;
                 statusDiv.className = `status-message status-${type}`;
             }
         }
         
-        function redirectToForm(url) {
-            window.location.href = url;
+        function showCheckSuccess(zone) {
+            document.getElementById('checkGeoBlock').classList.add('hidden');
+            document.getElementById('checkSuccessBlock').classList.remove('hidden');
+            
+            // Инкрементируем успешные проверки
+            incrementZoneStats(zone.id, 'success');
+            
+            // Перенаправление через 2 секунды
+            setTimeout(() => {
+                window.location.href = zone.targetFormUrl;
+            }, 2000);
         }
         
-        function checkUserLocation() {
-            if (userCheckInProgress) return;
+        function performGeoCheck() {
+            if (checkInProgress || !currentZoneForCheck) return;
             
             if (!navigator.geolocation) {
-                updateUserStatus('error', '❌ Ваш браузер не поддерживает геолокацию');
+                updateCheckStatus('error', '❌ Ваш браузер не поддерживает геолокацию');
                 return;
             }
             
-            userCheckInProgress = true;
-            const btn = document.getElementById('userCheckBtn');
+            checkInProgress = true;
+            const btn = document.getElementById('checkGeoBtn');
             btn.disabled = true;
             btn.innerHTML = '<span class="loading-spinner"></span> Проверка...';
-            updateUserStatus('loading', '⏳ Определение местоположения...');
+            updateCheckStatus('loading', '⏳ Определение местоположения... Пожалуйста, разрешите доступ к геолокации.');
             
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     const userLat = position.coords.latitude;
                     const userLng = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
                     
-                    const match = findMatchingZone(userLat, userLng);
+                    const distance = calculateDistance(userLat, userLng, currentZoneForCheck.lat, currentZoneForCheck.lng);
+                    const isAllowed = distance <= currentZoneForCheck.radius;
                     
-                    if (match) {
-                        updateUserStatus('success', `✅ Доступ разрешен! Зона: "${match.zone.name}". Перенаправление...`);
-                        document.getElementById('userGeoBlock').classList.add('hidden');
-                        document.getElementById('userSuccessBlock').classList.remove('hidden');
-                        setTimeout(() => redirectToForm(match.zone.formUrl), 1500);
+                    console.log(`📍 Ваши координаты: ${userLat}, ${userLng}`);
+                    console.log(`🎯 Целевая точка: ${currentZoneForCheck.lat}, ${currentZoneForCheck.lng}`);
+                    console.log(`📏 Расстояние: ${Math.round(distance)} м`);
+                    console.log(`✅ Разрешено: ${isAllowed}`);
+                    
+                    if (isAllowed) {
+                        updateCheckStatus('success', `✅ Доступ разрешен! Расстояние до зоны "${currentZoneForCheck.name}": ${Math.round(distance)} м. Перенаправление...`);
+                        showCheckSuccess(currentZoneForCheck);
                     } else {
-                        let zonesInfo = '';
-                        const activeZones = zones.filter(z => z.active !== false);
-                        if (activeZones.length > 0) {
-                            zonesInfo = '<br><br>📍 Разрешенные зоны:<br>';
-                            activeZones.forEach(zone => {
-                                zonesInfo += `• ${zone.name} (${zone.lat}, ${zone.lng}, радиус ${zone.radius} м)<br>`;
-                            });
-                        }
-                        updateUserStatus('error', `❌ Регистрация невозможна. Координаты не совпадают.${zonesInfo}`);
+                        updateCheckStatus('error', `❌ Доступ запрещен! Вы находитесь на расстоянии ${Math.round(distance)} м от зоны "${currentZoneForCheck.name}". Разрешено: в радиусе ${currentZoneForCheck.radius} м от точки.<br><br><small>Ваши координаты: ${userLat.toFixed(6)}, ${userLng.toFixed(6)}</small>`);
                         btn.disabled = false;
-                        btn.innerHTML = '🎯 Подтвердить местоположение';
+                        btn.innerHTML = '🎯 Попробовать снова';
                     }
-                    userCheckInProgress = false;
+                    checkInProgress = false;
                 },
                 (error) => {
-                    updateUserStatus('error', '❌ Не удалось определить местоположение. Разрешите доступ к геолокации.');
+                    let errorMessage = '';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = '❌ Доступ к геолокации запрещен. Разрешите доступ в настройках браузера.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = '❌ Не удалось определить местоположение. Проверьте GPS сигнал.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = '❌ Время ожидания истекло. Попробуйте еще раз.';
+                            break;
+                        default:
+                            errorMessage = '❌ Ошибка определения местоположения.';
+                    }
+                    updateCheckStatus('error', errorMessage);
                     btn.disabled = false;
-                    btn.innerHTML = '🎯 Подтвердить местоположение';
-                    userCheckInProgress = false;
+                    btn.innerHTML = '🎯 Попробовать снова';
+                    checkInProgress = false;
                 },
-                { enableHighAccuracy: true, timeout: 10000 }
+                { enableHighAccuracy: true, timeout: 15000 }
             );
         }
         
         // ====================================================
-        // QR-КОДЫ
+        // ОТОБРАЖЕНИЕ АДМИН-ПАНЕЛИ
         // ====================================================
         
-        let currentQrZone = null;
-        let currentQrCode = null;
-        
-        function generateQRCode(zone) {
-            const qrContainer = document.getElementById('qrcode');
-            qrContainer.innerHTML = '';
+        async function renderZonesList() {
+            const container = document.getElementById('zonesListContainer');
+            if (!container) return;
             
-            // Динамическая загрузка библиотеки QRCode
-            import('https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js').then(module => {
-                const QRCode = module.default;
-                const zoneUrl = getZoneUrl(zone.id);
-                currentQrCode = new QRCode(qrContainer, {
-                    text: zoneUrl,
-                    width: 250,
-                    height: 250,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-                document.getElementById('qrZoneName').textContent = zone.name;
-                document.getElementById('qrZoneUrl').textContent = zoneUrl;
-                currentQrZone = zone;
-            }).catch(() => {
-                // fallback
-                qrContainer.innerHTML = `<p style="color:#666;">QR-код: ${getZoneUrl(zone.id)}</p>`;
+            const zones = await loadUserZones();
+            
+            if (zones.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #888;">У вас пока нет созданных зон. Создайте первую!</p>';
+                return;
+            }
+            
+            let html = `
+                <table class="zones-table">
+                    <thead>
+                        <tr><th>Название</th><th>Координаты</th><th>Радиус</th><th>Статус</th><th>Статистика</th><th>Ссылка/QR</th><th>Действия</th></tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            for (const zone of zones) {
+                const stats = `👁️ ${zone.visits || 0} | ✅ ${zone.successfulChecks || 0}`;
+                html += `
+                    <tr>
+                        <td>
+                            <strong>${escapeHtml(zone.name)}</strong>
+                            ${zone.description ? `<br><small style="color:#888;">${escapeHtml(zone.description).substring(0, 40)}</small>` : ''}
+                        </td>
+                        <td>${zone.lat}, ${zone.lng}</td>
+                        <td>${zone.radius} м</td>
+                        <td><span class="badge ${zone.active ? 'badge-active' : 'badge-inactive'}">${zone.active ? 'Активна' : 'Неактивна'}</span></td>
+                        <td><small>${stats}</small></td>
+                        <td>
+                            <button class="btn-sm" style="background:#17a2b8;color:white;" onclick="window.showZoneQR('${zone.id}')">📱 QR</button>
+                            <button class="btn-sm" style="background:#28a745;color:white;" onclick="window.copyZoneLink('${zone.accessUrl}')">🔗 Копировать ссылку</button>
+                        </td>
+                        <td class="zone-actions">
+                            <button class="btn-sm" style="background:#d4edda;color:#155724;" onclick="window.editZone('${zone.id}')">✏️</button>
+                            <button class="btn-sm" style="background:#f8d7da;color:#721c24;" onclick="window.deleteZone('${zone.id}')">🗑️</button>
+                            <button class="btn-sm" style="background:#cce5ff;color:#004085;" onclick="window.toggleZoneStatus('${zone.id}', ${!zone.active})">🔘</button>
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function showZoneQR(zoneId) {
+            // Нужно получить зону по ID
+            loadUserZones().then(zones => {
+                const zone = zones.find(z => z.id === zoneId);
+                if (zone && zone.accessUrl) {
+                    showQRModal(zone.name, zone.accessUrl);
+                }
             });
         }
         
-        function showQRModal(zone) {
-            generateQRCode(zone);
+        function showQRModal(zoneName, url) {
+            const qrContainer = document.getElementById('qrContainer');
+            qrContainer.innerHTML = '';
+            
+            new QRCode(qrContainer, {
+                text: url,
+                width: 250,
+                height: 250,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            document.getElementById('qrZoneName').textContent = zoneName;
+            document.getElementById('qrZoneUrl').textContent = url;
             document.getElementById('qrModal').classList.add('active');
         }
         
         function downloadQRCode() {
-            const qrCanvas = document.querySelector('#qrcode canvas');
+            const qrCanvas = document.querySelector('#qrContainer canvas');
             if (qrCanvas) {
                 const link = document.createElement('a');
-                link.download = `QR_${currentQrZone.name.replace(/[^a-zа-яё0-9]/gi, '_')}.png`;
+                const zoneName = document.getElementById('qrZoneName').textContent;
+                link.download = `QR_${zoneName.replace(/[^a-zа-яё0-9]/gi, '_')}.png`;
                 link.href = qrCanvas.toDataURL();
                 link.click();
             } else {
@@ -911,48 +891,198 @@
             }
         }
         
+        function copyZoneLink(url) {
+            navigator.clipboard.writeText(url);
+            showCopyNotification('Ссылка скопирована!');
+        }
+        
+        function showCopyNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'copy-success';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 2000);
+        }
+        
         // ====================================================
-        // УПРАВЛЕНИЕ СОСТОЯНИЕМ АВТОРИЗАЦИИ
+        // УПРАВЛЕНИЕ ИНТЕРФЕЙСОМ
+        // ====================================================
+        
+        function showAdminPanel() {
+            if (currentUser) {
+                authScreen.classList.add('hidden');
+                checkPage.classList.add('hidden');
+                adminPanel.classList.remove('hidden');
+                renderZonesList();
+            } else {
+                alert('Сначала войдите в аккаунт');
+                hideAll();
+                authScreen.classList.remove('hidden');
+            }
+        }
+        
+        function hideAdminPanel() {
+            adminPanel.classList.add('hidden');
+            // Показываем страницу проверки если есть зона, иначе экран авторизации
+            if (currentZoneForCheck) {
+                checkPage.classList.remove('hidden');
+                authScreen.classList.add('hidden');
+            } else {
+                checkPage.classList.add('hidden');
+                authScreen.classList.remove('hidden');
+            }
+        }
+        
+        function hideAll() {
+            authScreen.classList.add('hidden');
+            checkPage.classList.add('hidden');
+            adminPanel.classList.add('hidden');
+        }
+        
+        // ====================================================
+        // СОЗДАНИЕ/РЕДАКТИРОВАНИЕ ЗОНЫ
+        // ====================================================
+        
+        document.getElementById('createZoneForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const newZone = await createZone({
+                name: document.getElementById('zoneName').value,
+                lat: document.getElementById('zoneLat').value,
+                lng: document.getElementById('zoneLng').value,
+                radius: document.getElementById('zoneRadius').value,
+                targetFormUrl: document.getElementById('zoneTargetUrl').value,
+                description: document.getElementById('zoneDescription').value
+            });
+            
+            if (newZone) {
+                e.target.reset();
+                document.querySelector('[data-tab="zones"]').click();
+                await renderZonesList();
+                alert('Зона создана! Ссылка и QR-код готовы.');
+            }
+        });
+        
+        window.editZone = async (zoneId) => {
+            const zones = await loadUserZones();
+            const zone = zones.find(z => z.id === zoneId);
+            if (!zone) return;
+            
+            document.getElementById('editZoneId').value = zone.id;
+            document.getElementById('editName').value = zone.name;
+            document.getElementById('editLat').value = zone.lat;
+            document.getElementById('editLng').value = zone.lng;
+            document.getElementById('editRadius').value = zone.radius;
+            document.getElementById('editTargetUrl').value = zone.targetFormUrl;
+            document.getElementById('editDescription').value = zone.description || '';
+            document.getElementById('editActive').value = zone.active ? 'true' : 'false';
+            
+            document.getElementById('editModal').classList.add('active');
+        };
+        
+        document.getElementById('saveEditBtn')?.addEventListener('click', async () => {
+            const id = document.getElementById('editZoneId').value;
+            await updateZone(id, {
+                name: document.getElementById('editName').value,
+                lat: parseFloat(document.getElementById('editLat').value),
+                lng: parseFloat(document.getElementById('editLng').value),
+                radius: parseInt(document.getElementById('editRadius').value),
+                targetFormUrl: document.getElementById('editTargetUrl').value,
+                description: document.getElementById('editDescription').value,
+                active: document.getElementById('editActive').value === 'true'
+            });
+            document.getElementById('editModal').classList.remove('active');
+            await renderZonesList();
+        });
+        
+        window.deleteZone = async (zoneId) => {
+            await deleteZone(zoneId);
+            await renderZonesList();
+        };
+        
+        window.toggleZoneStatus = async (zoneId, newStatus) => {
+            await updateZone(zoneId, { active: newStatus });
+            await renderZonesList();
+        };
+        
+        window.showZoneQR = showZoneQR;
+        window.copyZoneLink = copyZoneLink;
+        
+        // ====================================================
+        // ОБРАБОТКА ПРЯМЫХ ССЫЛОК (СТРАНИЦА ПРОВЕРКИ)
+        // ====================================================
+        
+        async function handleZoneAccess() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const slug = urlParams.get('zone');
+            
+            if (slug) {
+                const zone = await getZoneBySlug(slug);
+                if (zone && zone.active) {
+                    currentZoneForCheck = zone;
+                    hideAll();
+                    checkPage.classList.remove('hidden');
+                    
+                    // Отображаем информацию о зоне
+                    document.getElementById('checkZoneName').textContent = zone.name;
+                    document.getElementById('checkZoneDescription').textContent = zone.description || '';
+                    
+                    // Инкрементируем визиты
+                    await incrementZoneStats(zone.id, 'visit');
+                    
+                    // Автоматически начинаем проверку
+                    setTimeout(() => performGeoCheck(), 500);
+                } else if (zone && !zone.active) {
+                    hideAll();
+                    checkPage.classList.remove('hidden');
+                    document.getElementById('checkZoneName').textContent = zone.name;
+                    updateCheckStatus('error', '❌ Данная зона регистрации временно неактивна. Обратитесь к организатору.');
+                    document.getElementById('checkGeoBlock').classList.add('hidden');
+                } else {
+                    // Зона не найдена
+                    hideAll();
+                    authScreen.classList.remove('hidden');
+                    alert('Ссылка недействительна. Зона не найдена.');
+                }
+            } else {
+                // Нет параметра zone - показываем админку если авторизован
+                if (currentUser) {
+                    hideAll();
+                    adminPanel.classList.remove('hidden');
+                    renderZonesList();
+                } else {
+                    hideAll();
+                    authScreen.classList.remove('hidden');
+                }
+            }
+        }
+        
+        // ====================================================
+        // СОСТОЯНИЕ АВТОРИЗАЦИИ
         // ====================================================
         
         onAuthStateChanged(auth, async (user) => {
             currentUser = user;
             
             if (user) {
-                // Пользователь авторизован
-                authScreen.classList.add('hidden');
-                userModeScreen.classList.remove('hidden');
-                
                 // Загружаем данные пользователя
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
                 const userData = userDoc.data();
-                
                 userNameSpan.textContent = userData?.name || user.displayName || user.email;
                 userEmailSpan.textContent = user.email;
                 userInfo.classList.remove('hidden');
                 
-                // Загружаем зоны пользователя
-                await loadUserZones();
-                showUserZonesInfo();
-                
-                // Проверяем прямые ссылки
-                const urlParams = new URLSearchParams(window.location.search);
-                const zoneId = urlParams.get('zone');
-                if (zoneId && zones.find(z => z.id === zoneId)) {
-                    setTimeout(() => checkUserLocation(), 500);
-                }
+                // Обрабатываем текущий URL
+                await handleZoneAccess();
             } else {
-                // Пользователь не авторизован
-                authScreen.classList.remove('hidden');
-                userModeScreen.classList.add('hidden');
-                adminPanel.classList.add('hidden');
+                currentZoneForCheck = null;
                 userInfo.classList.add('hidden');
-                zones = [];
+                await handleZoneAccess();
             }
         });
         
         // ====================================================
-        // ИНИЦИАЛИЗАЦИЯ И ОБРАБОТЧИКИ
+        // ИНИЦИАЛИЗАЦИЯ
         // ====================================================
         
         function init() {
@@ -960,28 +1090,22 @@
             document.getElementById('registerBtn')?.addEventListener('click', register);
             document.getElementById('loginBtn')?.addEventListener('click', login);
             document.getElementById('logoutBtn')?.addEventListener('click', logout);
+            document.getElementById('logoutAdminBtn')?.addEventListener('click', logout);
             
-            // Пользовательский режим
-            document.getElementById('userCheckBtn')?.addEventListener('click', checkUserLocation);
-            document.getElementById('userManualRedirect')?.addEventListener('click', (e) => {
+            // Страница проверки
+            document.getElementById('checkGeoBtn')?.addEventListener('click', performGeoCheck);
+            document.getElementById('manualRedirect')?.addEventListener('click', (e) => {
                 e.preventDefault();
-                const activeZones = zones.filter(z => z.active !== false);
-                if (activeZones.length > 0) redirectToForm(activeZones[0].formUrl);
-            });
-            
-            // Админ-панель
-            document.getElementById('openAdminBtn')?.addEventListener('click', () => {
-                if (currentUser) {
-                    adminPanel.classList.toggle('hidden');
-                    if (!adminPanel.classList.contains('hidden')) {
-                        loadUserZones();
-                    }
-                } else {
-                    alert('Сначала войдите в аккаунт');
+                if (currentZoneForCheck) {
+                    window.location.href = currentZoneForCheck.targetFormUrl;
                 }
             });
             
-            // Вкладки админки
+            // Админ-панель
+            document.getElementById('openAdminBtn')?.addEventListener('click', showAdminPanel);
+            document.getElementById('closeAdminBtn')?.addEventListener('click', hideAdminPanel);
+            
+            // Вкладки
             document.querySelectorAll('.nav-tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -989,39 +1113,6 @@
                     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                     document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
                 });
-            });
-            
-            // Создание зоны
-            document.getElementById('createZoneForm')?.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                await addZone({
-                    name: document.getElementById('zoneName').value,
-                    lat: document.getElementById('zoneLat').value,
-                    lng: document.getElementById('zoneLng').value,
-                    radius: document.getElementById('zoneRadius').value,
-                    formUrl: document.getElementById('zoneFormUrl').value,
-                    description: document.getElementById('zoneDescription').value,
-                    active: document.getElementById('zoneActive').value
-                });
-                e.target.reset();
-                document.querySelector('[data-tab="zones"]').click();
-                alert('Зона добавлена!');
-            });
-            
-            // Редактирование зоны
-            document.getElementById('saveEditBtn')?.addEventListener('click', async () => {
-                const id = document.getElementById('editZoneId').value;
-                await updateZone(id, {
-                    name: document.getElementById('editName').value,
-                    lat: parseFloat(document.getElementById('editLat').value),
-                    lng: parseFloat(document.getElementById('editLng').value),
-                    radius: parseInt(document.getElementById('editRadius').value),
-                    formUrl: document.getElementById('editFormUrl').value,
-                    description: document.getElementById('editDescription').value,
-                    active: document.getElementById('editActive').value === 'true'
-                });
-                document.getElementById('editModal').classList.remove('active');
-                showUserZonesInfo();
             });
             
             // QR-код
@@ -1036,28 +1127,6 @@
             });
         }
         
-        // Глобальные функции для onclick
-        window.editZone = (id) => {
-            const zone = zones.find(z => z.id === id);
-            if (!zone) return;
-            document.getElementById('editZoneId').value = zone.id;
-            document.getElementById('editName').value = zone.name;
-            document.getElementById('editLat').value = zone.lat;
-            document.getElementById('editLng').value = zone.lng;
-            document.getElementById('editRadius').value = zone.radius;
-            document.getElementById('editFormUrl').value = zone.formUrl;
-            document.getElementById('editDescription').value = zone.description || '';
-            document.getElementById('editActive').value = zone.active !== false ? 'true' : 'false';
-            document.getElementById('editModal').classList.add('active');
-        };
-        window.deleteZone = deleteZone;
-        window.toggleZoneStatus = toggleZoneStatus;
-        window.copyZoneLink = (zoneId) => {
-            navigator.clipboard.writeText(getZoneUrl(zoneId));
-            alert('Ссылка скопирована!');
-        };
-        window.showQRForZone = showQRModal;
-        
         init();
     </script>
 </head>
@@ -1066,12 +1135,11 @@
         <!-- ЭКРАН АВТОРИЗАЦИИ -->
         <div id="authScreen" class="card">
             <div class="card-header">
-                <h1>🔐 Гео-регистрация</h1>
-                <p>Войдите или создайте аккаунт</p>
+                <h1>🔐 Гео-шлюз</h1>
+                <p>Создавайте гео-привязанные ссылки и QR-коды для регистрации</p>
             </div>
             <div class="card-body">
                 <div class="form-row">
-                    <!-- Форма входа -->
                     <div>
                         <h3 style="margin-bottom: 20px;">Вход</h3>
                         <div class="form-group">
@@ -1083,8 +1151,6 @@
                         <button id="loginBtn" class="btn btn-primary btn-block">Войти</button>
                         <div id="loginError" class="status-message status-error hidden"></div>
                     </div>
-                    
-                    <!-- Форма регистрации -->
                     <div>
                         <h3 style="margin-bottom: 20px;">Регистрация</h3>
                         <div class="form-group">
@@ -1103,44 +1169,44 @@
             </div>
         </div>
         
-        <!-- ПОЛЬЗОВАТЕЛЬСКИЙ РЕЖИМ -->
-        <div id="userModeScreen" class="hidden">
-            <div class="card">
-                <div class="card-header">
-                    <h1>📍 Регистрация на мероприятие</h1>
-                    <p>Требуется подтверждение местоположения</p>
-                </div>
-                <div class="card-body user-mode">
-                    <div id="userInfo" class="user-info hidden">
-                        <div class="user-avatar">👤</div>
-                        <div class="user-details">
-                            <h3 id="userName"></h3>
-                            <p id="userEmail"></p>
-                        </div>
-                        <button id="logoutBtn" class="btn btn-danger btn-sm" style="margin-left: auto;">🚪 Выйти</button>
+        <!-- СТРАНИЦА ПРОВЕРКИ ГЕОЛОКАЦИИ (доступ по ссылке) -->
+        <div id="checkPage" class="card hidden">
+            <div class="card-header">
+                <h1>📍 Проверка местоположения</h1>
+                <p>Для доступа к форме необходимо подтвердить свои координаты</p>
+            </div>
+            <div class="card-body check-page">
+                <div id="userInfo" class="user-info hidden">
+                    <div class="user-avatar">👤</div>
+                    <div class="user-details">
+                        <h4 id="userName"></h4>
+                        <p id="userEmail"></p>
                     </div>
-                    
-                    <div id="userGeoBlock">
-                        <div class="location-icon">📍</div>
-                        <div id="userStatusMessage" class="status-message status-warning">
-                            ⚠️ Для доступа к регистрации необходимо подтвердить ваше местоположение
-                        </div>
-                        <button id="userCheckBtn" class="btn btn-primary" style="margin-top: 15px;">
-                            🎯 Подтвердить местоположение
-                        </button>
-                        <div id="userZonesInfo" class="zones-info"></div>
-                    </div>
-                    <div id="userSuccessBlock" class="hidden">
-                        <div class="location-icon">✅</div>
-                        <h3>Доступ разрешен!</h3>
-                        <p style="margin: 15px 0; color: #28a745;">Перенаправление на форму регистрации...</p>
-                        <div class="loading-spinner"></div>
-                        <p style="margin-top: 15px;"><a href="#" id="userManualRedirect">Нажмите здесь</a></p>
-                    </div>
+                    <button id="logoutBtn" class="btn btn-danger btn-sm" style="margin-left: auto;">🚪 Выйти</button>
                 </div>
-                <div class="footer">
-                    🔒 Доступ разрешен только в зонах проведения мероприятия
+                
+                <div id="checkGeoBlock">
+                    <div class="location-icon">📍</div>
+                    <div class="zone-name" id="checkZoneName"></div>
+                    <div class="zone-description" id="checkZoneDescription" style="color: #666; margin-bottom: 20px;"></div>
+                    <div id="checkStatusMessage" class="status-message status-warning">
+                        ⚠️ Для доступа к регистрации необходимо подтвердить ваше местоположение
+                    </div>
+                    <button id="checkGeoBtn" class="btn btn-primary" style="margin-top: 15px;">
+                        🎯 Подтвердить местоположение
+                    </button>
                 </div>
+                
+                <div id="checkSuccessBlock" class="hidden">
+                    <div class="location-icon">✅</div>
+                    <h3>Доступ разрешен!</h3>
+                    <p style="margin: 15px 0; color: #28a745;">Перенаправление на форму регистрации...</p>
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 15px;"><a href="#" id="manualRedirect">Нажмите здесь</a>, если перенаправление не происходит</p>
+                </div>
+            </div>
+            <div class="footer">
+                🔒 Доступ разрешен только в зоне проведения мероприятия
             </div>
         </div>
         
@@ -1148,9 +1214,19 @@
         <div id="adminPanel" class="card hidden">
             <div class="card-header">
                 <h1>🔧 Панель управления</h1>
-                <p>Управление гео-зонами</p>
+                <p>Создание гео-привязанных ссылок и QR-кодов</p>
             </div>
             <div class="card-body">
+                <div id="userInfo" class="user-info">
+                    <div class="user-avatar">👤</div>
+                    <div class="user-details">
+                        <h4 id="userName"></h4>
+                        <p id="userEmail"></p>
+                    </div>
+                    <button id="logoutAdminBtn" class="btn btn-danger btn-sm" style="margin-left: auto;">🚪 Выйти</button>
+                    <button id="closeAdminBtn" class="btn btn-secondary btn-sm">✖️ Закрыть</button>
+                </div>
+                
                 <div class="nav-tabs">
                     <button class="nav-tab active" data-tab="zones">📋 Мои зоны</button>
                     <button class="nav-tab" data-tab="create">➕ Создать зону</button>
@@ -1164,46 +1240,43 @@
                     <form id="createZoneForm">
                         <div class="form-group">
                             <label>Название зоны *</label>
-                            <input type="text" id="zoneName" required placeholder="Например: Главный вход">
+                            <input type="text" id="zoneName" required placeholder="Например: Главный вход, Конференц-зал, Сцена">
+                            <small>Название будет отображаться на странице проверки</small>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Широта *</label>
+                                <label>Широта (latitude) *</label>
                                 <input type="number" step="any" id="zoneLat" required placeholder="57.006853">
+                                <small>Координаты из Google Maps (ПКМ → Что здесь?)</small>
                             </div>
                             <div class="form-group">
-                                <label>Долгота *</label>
+                                <label>Долгота (longitude) *</label>
                                 <input type="number" step="any" id="zoneLng" required placeholder="40.979481">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>Радиус (метры) *</label>
-                            <input type="number" id="zoneRadius" required value="100">
+                            <label>Радиус действия (метры) *</label>
+                            <input type="number" id="zoneRadius" required value="100" step="10">
+                            <small>Расстояние от точки, в котором разрешен доступ</small>
                         </div>
                         <div class="form-group">
-                            <label>Ссылка на форму *</label>
-                            <input type="url" id="zoneFormUrl" required placeholder="https://forms.yandex.ru/...">
+                            <label>Целевая форма регистрации *</label>
+                            <input type="url" id="zoneTargetUrl" required placeholder="https://forms.yandex.ru/... или https://docs.google.com/...">
+                            <small>Куда перенаправить пользователя после успешной проверки</small>
                         </div>
                         <div class="form-group">
-                            <label>Описание</label>
-                            <textarea id="zoneDescription" rows="2"></textarea>
+                            <label>Описание зоны (необязательно)</label>
+                            <textarea id="zoneDescription" rows="2" placeholder="Дополнительная информация для пользователя"></textarea>
                         </div>
-                        <div class="form-group">
-                            <label>Статус</label>
-                            <select id="zoneActive">
-                                <option value="true">Активна</option>
-                                <option value="false">Неактивна</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary">➕ Добавить зону</button>
+                        <button type="submit" class="btn btn-primary">✨ Создать зону → сгенерировать ссылку и QR-код</button>
                     </form>
                 </div>
             </div>
         </div>
         
         <!-- Кнопка админ-панели -->
-        <div class="admin-badge">
-            <button id="openAdminBtn" class="admin-btn">🔧 Админ-панель</button>
+        <div class="admin-badge" style="position: fixed; bottom: 20px; right: 20px;">
+            <button id="openAdminBtn" class="admin-btn" style="background: #333; color: white; border: none; border-radius: 50px; padding: 12px 20px; cursor: pointer;">🔧 Админ-панель</button>
         </div>
     </div>
     
@@ -1221,8 +1294,8 @@
                     <div class="form-group"><input type="number" step="any" id="editLat" placeholder="Широта"></div>
                     <div class="form-group"><input type="number" step="any" id="editLng" placeholder="Долгота"></div>
                 </div>
-                <div class="form-group"><input type="number" id="editRadius" placeholder="Радиус"></div>
-                <div class="form-group"><input type="url" id="editFormUrl" placeholder="Ссылка на форму"></div>
+                <div class="form-group"><input type="number" id="editRadius" placeholder="Радиус (м)"></div>
+                <div class="form-group"><input type="url" id="editTargetUrl" placeholder="Ссылка на форму"></div>
                 <div class="form-group"><textarea id="editDescription" rows="2" placeholder="Описание"></textarea></div>
                 <div class="form-group">
                     <select id="editActive">
@@ -1242,14 +1315,19 @@
     <div id="qrModal" class="modal">
         <div class="modal-content" style="max-width: 400px;">
             <div class="modal-header">
-                <h3>📱 QR-код</h3>
+                <h3>📱 QR-код для доступа</h3>
                 <button class="close-modal close-qr">&times;</button>
             </div>
             <div class="modal-body">
-                <div id="qrContainer" class="qr-container"><div id="qrcode"></div></div>
-                <div id="qrZoneName" style="font-weight: bold;"></div>
+                <div class="qr-container">
+                    <div id="qrContainer"></div>
+                </div>
+                <div id="qrZoneName" style="font-weight: bold; margin: 10px 0;"></div>
                 <div id="qrZoneUrl" style="font-size: 11px; color: #666; word-break: break-all;"></div>
-                <button id="downloadQrBtn" class="btn btn-success btn-sm" style="margin-top: 15px;">💾 Скачать PNG</button>
+                <div class="qr-actions" style="margin-top: 15px;">
+                    <button id="downloadQrBtn" class="btn btn-success btn-sm">💾 Скачать PNG</button>
+                    <button class="btn btn-secondary btn-sm close-qr">Закрыть</button>
+                </div>
             </div>
         </div>
     </div>
