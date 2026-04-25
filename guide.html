@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geo-Gate | User Guide / Гео-шлюз | Инструкция</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0b1120 0%, #19223b 100%);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            padding: 40px 20px;
+        }
+        .guide-card {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.35);
+            overflow: hidden;
+        }
+        .guide-header {
+            background: linear-gradient(135deg, #0f2b3d, #1a4a6f);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .guide-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .lang-switch {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .lang-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .lang-btn.active {
+            background: white;
+            color: #1e3a5f;
+        }
+        .lang-btn:hover {
+            background: rgba(255,255,255,0.4);
+        }
+        .guide-content {
+            padding: 40px;
+        }
+        .step-card {
+            background: #f8fafc;
+            border-radius: 24px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 5px solid #3b82f6;
+            transition: all 0.3s ease;
+        }
+        .step-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+        }
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #1e3a5f, #2563eb);
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .step-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 15px;
+        }
+        .tip-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+        }
+        .warning-box {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 15px 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+        }
+        .success-box {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 15px 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+        }
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+        }
+        .quick-commands {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+        .command-card {
+            background: #f1f5f9;
+            border-radius: 16px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .command-card:hover {
+            transform: translateY(-3px);
+            background: #e2e8f0;
+        }
+        .command-card i {
+            font-size: 2rem;
+            color: #3b82f6;
+            margin-bottom: 10px;
+        }
+        .command-card .command-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .command-card .command-location {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+        .faq-item {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 15px 0;
+            cursor: pointer;
+        }
+        .faq-question {
+            font-weight: 600;
+            color: #1e293b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .faq-answer {
+            display: none;
+            padding-top: 10px;
+            color: #475569;
+            line-height: 1.6;
+        }
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .btn-guide {
+            padding: 12px 30px;
+            border-radius: 40px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-guide-primary {
+            background: linear-gradient(95deg, #1e3a5f, #2563eb);
+            color: white;
+            border: none;
+        }
+        .btn-guide-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(37,99,235,0.4);
+            color: white;
+        }
+        .btn-guide-outline {
+            background: transparent;
+            border: 2px solid #3b82f6;
+            color: #3b82f6;
+        }
+        .btn-guide-outline:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        [data-lang="en"] .lang-ru,
+        [data-lang="ru"] .lang-en {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .guide-content { padding: 20px; }
+            .guide-header h1 { font-size: 1.8rem; }
+            .step-title { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body data-lang="ru">
+<div class="guide-card">
+    <div class="guide-header">
+        <h1><i class="bi bi-geo-alt-fill me-2"></i><span class="lang-ru">Гео-шлюз</span><span class="lang-en">Geo-Gate</span></h1>
+        <p><span class="lang-ru">Полное руководство по использованию сервиса гео-привязанных ссылок</span><span class="lang-en">Complete guide to using geo-linked access service</span></p>
+        
+        <!-- Переключатель языка -->
+        <div class="lang-switch">
+            <button class="lang-btn active" data-lang-value="ru">🇷🇺 Русский</button>
+            <button class="lang-btn" data-lang-value="en">🇬🇧 English</button>
+        </div>
+        
+        <div class="nav-buttons">
+            <a href="#" onclick="window.location.href=window.location.origin + window.location.pathname; return false;" class="btn btn-guide btn-guide-primary">
+                <i class="bi bi-arrow-left me-2"></i><span class="lang-ru">Вернуться к сервису</span><span class="lang-en">Back to service</span>
+            </a>
+            <a href="#" onclick="window.print(); return false;" class="btn btn-guide btn-guide-outline">
+                <i class="bi bi-printer me-2"></i><span class="lang-ru">Распечатать</span><span class="lang-en">Print</span>
+            </a>
+        </div>
+    </div>
+    
+    <div class="guide-content">
+        <!-- Содержание -->
+        <div class="info-box mb-4">
+            <i class="bi bi-list-ul me-2"></i>
+            <strong class="lang-ru">Содержание инструкции:</strong>
+            <strong class="lang-en">Table of contents:</strong>
+            <div class="row mt-2">
+                <div class="col-md-4"><a href="#register" class="text-dark"><span class="lang-ru">1. Регистрация</span><span class="lang-en">1. Registration</span></a></div>
+                <div class="col-md-4"><a href="#login" class="text-dark"><span class="lang-ru">2. Вход в систему</span><span class="lang-en">2. Login</span></a></div>
+                <div class="col-md-4"><a href="#create" class="text-dark"><span class="lang-ru">3. Создание зоны</span><span class="lang-en">3. Create zone</span></a></div>
+                <div class="col-md-4"><a href="#manage" class="text-dark"><span class="lang-ru">4. Управление зонами</span><span class="lang-en">4. Manage zones</span></a></div>
+                <div class="col-md-4"><a href="#qr" class="text-dark"><span class="lang-ru">5. QR-код и ссылка</span><span class="lang-en">5. QR code & link</span></a></div>
+                <div class="col-md-4"><a href="#check" class="text-dark"><span class="lang-ru">6. Гео-проверка</span><span class="lang-en">6. Geo verification</span></a></div>
+            </div>
+        </div>
+
+        <!-- 1. Регистрация / Registration -->
+        <div id="register" class="step-card">
+            <div class="d-flex align-items-center mb-3">
+                <span class="step-number">1</span>
+                <span class="step-title lang-ru">Регистрация и подтверждение почты</span>
+                <span class="step-title lang-en">Registration & Email Verification</span>
+            </div>
+            <div class="row">
+                <div class="col-md-7">
+                    <ol class="lang-ru">
+                        <li>На главном экране в правой колонке заполните форму регистрации</li>
+                        <li><strong>Имя</strong> — ваше имя или название организации</li>
+                        <li><strong>Email</strong> — действующий email (на него придет письмо)</li>
+                        <li><strong>Пароль</strong> — минимум 6 символов (рекомендуется 8+)</li>
+                        <li>Нажмите <strong>«Создать аккаунт»</strong></li>
+                        <li>Откройте письмо от Firebase и подтвердите email</li>
+                    </ol>
+                    <ol class="lang-en">
+                        <li>Fill out the registration form in the right column on the main screen</li>
+                        <li><strong>Name</strong> — your name or organization name</li>
+                        <li><strong>Email</strong> — valid email (a confirmation letter will be sent)</li>
+                        <li><strong>Password</strong> — minimum 6 characters (8+ recommended)</li>
+                        <li>Click <strong>“Create account”</strong></li>
+                        <li>Open the email from Firebase and verify your email</li>
+                    </ol>
+                    <div class="tip-box">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        <span class="lang-ru"><strong>Совет:</strong> Без подтверждения email вход невозможен! Проверьте папку «Спам», если письмо не пришло.</span>
+                        <span class="lang-en"><strong>Tip:</strong> Login is impossible without email verification! Check your Spam folder if the email hasn't arrived.</span>
+                    </div>
+                </div>
+                <div class="col-md-5 text-center">
+                    <i class="bi bi-envelope-check" style="font-size: 80px; color: #3b82f6;"></i>
+                    <p class="text-muted mt-2"><span class="lang-ru">После регистрации — подтвердите email</span><span class="lang-en">After registration — verify your email</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Вход / Login -->
+        <div id="login" class="step-card">
+            <div class="d-flex align-items-center mb-3">
+                <span class="step-number">2</span>
+                <span class="step-title lang-ru">Вход в систему</span>
+                <span class="step-title lang-en">Login to the system</span>
+            </div>
+            <div class="row">
+                <div class="col-md-7">
+                    <ol class="lang-ru">
+                        <li>На главном экране в левой колонке заполните поля входа</li>
+                        <li>Введите подтвержденный <strong>Email</strong> и <strong>Пароль</strong></li>
+                        <li>Нажмите <strong>«Войти»</strong></li>
+                        <li>После входа откроется <strong>Личный кабинет</strong></li>
+                    </ol>
+                    <ol class="lang-en">
+                        <li>Fill out the login fields in the left column on the main screen</li>
+                        <li>Enter your verified <strong>Email</strong> and <strong>Password</strong></li>
+                        <li>Click <strong>“Login”</strong></li>
+                        <li>After login, the <strong>Dashboard</strong> will open</li>
+                    </ol>
+                    <div class="info-box mt-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <span class="lang-ru">Кнопка <strong>«Личный кабинет»</strong> всегда доступна в правом нижнем углу экрана.</span>
+                        <span class="lang-en">The <strong>“Dashboard”</strong> button is always available in the bottom-right corner.</span>
+                    </div>
+                </div>
+                <div class="col-md-5 text-center">
+                    <i class="bi bi-box-arrow-in-right" style="font-size: 80px; color: #10b981;"></i>
+                    <p class="text-muted mt-2"><span class="lang-ru">Вход в личный кабинет</span><span class="lang-en">Login to dashboard</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Создание зоны / Create zone -->
+        <div id="create" class="step-card">
+            <div class="d-flex align-items-center mb-3">
+                <span class="step-number">3</span>
+                <span class="step-title lang-ru">Создание гео-зоны доступа</span>
+                <span class="step-title lang-en">Creating a geo-zone</span>
+            </div>
+            <ol class="lang-ru">
+                <li>В личном кабинете перейдите на вкладку <strong>«Создать зону»</strong></li>
+                <li>Заполните форму:
+                    <ul class="mt-2">
+                        <li><strong>Название зоны</strong> — например, «Вход на конференцию»</li>
+                        <li><strong>Широта / Долгота</strong> — можно выбрать на карте (кнопка ниже)</li>
+                        <li><strong>Радиус</strong> — разрешенное расстояние от точки (метры)</li>
+                        <li><strong>Ссылка на форму</strong> — куда попадет пользователь после проверки</li>
+                        <li><strong>Описание</strong> — дополнительная информация (необязательно)</li>
+                    </ul>
+                </li>
+                <li>Нажмите <strong>«📍 Выбрать на Яндекс.Карте»</strong> — откроется карта для точного выбора координат</li>
+                <li>Нажмите <strong>«Создать зону»</strong></li>
+            </ol>
+            <ol class="lang-en">
+                <li>In the dashboard, go to the <strong>“Create zone”</strong> tab</li>
+                <li>Fill out the form:
+                    <ul class="mt-2">
+                        <li><strong>Zone name</strong> — e.g., “Conference entrance”</li>
+                        <li><strong>Latitude / Longitude</strong> — can be selected on the map (button below)</li>
+                        <li><strong>Radius</strong> — allowed distance from the point (meters)</li>
+                        <li><strong>Form link</strong> — where the user will be redirected after verification</li>
+                        <li><strong>Description</strong> — additional information (optional)</li>
+                    </ul>
+                </li>
+                <li>Click <strong>“📍 Select on Yandex Map”</strong> — the map will open for precise coordinate selection</li>
+                <li>Click <strong>“Create zone”</strong></li>
+            </ol>
+            <div class="tip-box">
+                <i class="bi bi-geo-alt-fill me-2"></i>
+                <span class="lang-ru"><strong>Удобный способ выбора координат:</strong> кликните на карте или перетащите метку — координаты подставятся автоматически.</span>
+                <span class="lang-en"><strong>Convenient coordinate selection:</strong> click on the map or drag the marker — coordinates will be filled automatically.</span>
+            </div>
+        </div>
+
+        <!-- 4. Управление зонами / Manage zones -->
+        <div id="manage" class="step-card">
+            <div class="d-flex align-items-center mb-3">
+                <span class="step-number">4</span>
+                <span class="step-title lang-ru">Управление зонами</span>
+                <span class="step-title lang-en">Zone Management</span>
+            </div>
+            <p class="lang-ru">В разделе <strong>«Мои зоны»</strong> каждая зона отображается в виде карточки с кнопками:</p>
+            <p class="lang-en">In the <strong>“My zones”</strong> section, each zone appears as a card with buttons:</p>
+            <div class="quick-commands">
+                <div class="command-card"><i class="bi bi-qr-code"></i><div class="command-title lang-ru">QR-код</div><div class="command-title lang-en">QR code</div><div class="command-location lang-ru">Показать и скачать QR</div><div class="command-location lang-en">View & download QR</div></div>
+                <div class="command-card"><i class="bi bi-link"></i><div class="command-title lang-ru">Копировать ссылку</div><div class="command-title lang-en">Copy link</div><div class="command-location lang-ru">Скопировать URL в буфер</div><div class="command-location lang-en">Copy URL to clipboard</div></div>
+                <div class="command-card"><i class="bi bi-pencil-square"></i><div class="command-title lang-ru">Редактировать</div><div class="command-title lang-en">Edit</div><div class="command-location lang-ru">Изменить параметры зоны</div><div class="command-location lang-en">Change zone parameters</div></div>
+                <div class="command-card"><i class="bi bi-trash"></i><div class="command-title lang-ru">Удалить</div><div class="command-title lang-en">Delete</div><div class="command-location lang-ru">Безвозвратное удаление</div><div class="command-location lang-en">Permanent deletion</div></div>
+                <div class="command-card"><i class="bi bi-pause-circle"></i><div class="command-title lang-ru">Отключить</div><div class="command-title lang-en">Disable</div><div class="command-location lang-ru">Временно закрыть доступ</div><div class="command-location lang-en">Temporarily close access</div></div>
+            </div>
+            <div class="warning-box">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <span class="lang-ru"><strong>Внимание:</strong> Удаленная зона восстанавливается только созданием заново. Отключение (пауза) — безопасно, данные сохраняются.</span>
+                <span class="lang-en"><strong>Caution:</strong> A deleted zone can only be restored by creating it again. Disabling (pause) is safe — data is preserved.</span>
+            </div>
+        </div>
+
+        <!-- 5. QR-код / QR code -->
+        <div id="qr" class="step-card">
+            <div class="d-flex align-items-center mb-3">
+                <span class="step-number">5</span>
+                <span class="step-title lang-ru">QR-код и ссылка для доступа</span>
+                <span class="step-title lang-en">QR code & access link</span>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="lang-ru"><strong>Ссылка:</strong> Нажмите «Копировать» — ссылка будет в буфере обмена.</p>
+                    <p class="lang-en"><strong>Link:</strong> Click “Copy” — the link will be copied to clipboard.</p>
+                    <p class="lang-ru"><strong>QR-код:</strong></p>
+                    <p class="lang-en"><strong>QR code:</strong></p>
+                    <ol class="lang-ru">
+                        <li>Нажмите «QR» на карточке зоны</li>
+                        <li>QR-код сгенерируется автоматически</li>
+                        <li>Нажмите «Скачать PNG» — сохранится изображение с названием зоны и ссылкой</li>
+                    </ol>
+                    <ol class="lang-en">
+                        <li>Click “QR” on the zone card</li>
+                        <li>The QR code will be generated automatically</li>
+                        <li>Click “Download PNG” — an image with zone name and link will be saved</li>
+                    </ol>
+                    <div class="tip-box">
+                        <i class="bi bi-printer me-2"></i>
+                        <span class="lang-ru"><strong>Совет:</strong> Распечатайте QR-код и разместите на месте события — пользователи отсканируют камерой.</span>
+                        <span class="lang-en"><strong>Tip:</strong> Print the QR code and place it at the event location — users can scan it with their camera.</span>
+                    </div>
+                </div>
+                <div class="col-md-6 text-center">
+                    <i class="bi bi-qr-code" style="font-size: 80px; color: #1e3a5f;"></i>
+                    <p class="text-muted mt-2"><span class="lang-ru">Пример ссылки:</span><span class="lang-en">Example link:</span></p>
+                    <code class="small">https://artmotor.github.io/map-register2/?zone=конференция_123456</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Гео-проверка / Geo verification -->
+        <div id="check" class="step-card">
+            <div class="d-flex align-items-center mb-3">
+                <span class="step-number">6</span>
+                <span class="step-title lang-ru">Как проходит гео-проверка у пользователя</span>
+                <span class="step-title lang-en">How geo-verification works for users</span>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <ol class="lang-ru">
+                        <li>Пользователь переходит по ссылке или сканирует QR</li>
+                        <li>Открывается страница с названием зоны и кнопкой проверки</li>
+                        <li>Пользователь нажимает <strong>«Подтвердить местоположение»</strong></li>
+                        <li>Браузер запрашивает разрешение на геолокацию — нужно нажать «Разрешить»</li>
+                        <li>Система проверяет расстояние до зоны</li>
+                        <li>Если пользователь в радиусе → перенаправление на форму</li>
+                        <li>Если вне радиуса → сообщение с указанием расстояния</li>
+                    </ol>
+                    <ol class="lang-en">
+                        <li>User clicks the link or scans the QR code</li>
+                        <li>A page opens with the zone name and verification button</li>
+                        <li>User clicks <strong>“Verify location”</strong></li>
+                        <li>The browser asks for geolocation permission — click “Allow”</li>
+                        <li>The system checks the distance to the zone</li>
+                        <li>If user is within radius → redirected to the form</li>
+                        <li>If outside radius → error message with distance</li>
+                    </ol>
+                </div>
+                <div class="col-md-6">
+                    <div class="success-box">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <strong class="lang-ru">Результаты проверки:</strong>
+                        <strong class="lang-en">Verification results:</strong>
+                        <ul class="mt-2 mb-0 lang-ru">
+                            <li>✅ В радиусе — доступ открыт</li>
+                            <li>❌ Вне радиуса — доступ запрещен</li>
+                            <li>⚠️ Запретил геолокацию — просьба разрешить</li>
+                            <li>⏸️ Зона неактивна — сообщение о недоступности</li>
+                        </ul>
+                        <ul class="mt-2 mb-0 lang-en">
+                            <li>✅ Within radius — access granted</li>
+                            <li>❌ Outside radius — access denied</li>
+                            <li>⚠️ Geolocation denied — request to allow</li>
+                            <li>⏸️ Zone inactive — message about unavailability</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статистика / Statistics -->
+        <div class="info-box mt-4">
+            <i class="bi bi-graph-up me-2"></i>
+            <strong class="lang-ru">Статистика в карточке зоны:</strong>
+            <strong class="lang-en">Statistics in zone card:</strong>
+            <ul class="mt-2 mb-0 lang-ru">
+                <li><i class="bi bi-eye"></i> <strong>Visits</strong> — сколько раз переходили по ссылке</li>
+                <li><i class="bi bi-check-circle"></i> <strong>Successful checks</strong> — сколько успешно прошли проверку</li>
+            </ul>
+            <ul class="mt-2 mb-0 lang-en">
+                <li><i class="bi bi-eye"></i> <strong>Visits</strong> — how many times the link was opened</li>
+                <li><i class="bi bi-check-circle"></i> <strong>Successful checks</strong> — how many successfully passed verification</li>
+            </ul>
+        </div>
+
+        <!-- Быстрые команды / Quick commands -->
+        <h3 class="mt-5 mb-3"><i class="bi bi-lightning-charge me-2"></i><span class="lang-ru">Быстрые команды</span><span class="lang-en">Quick commands</span></h3>
+        <div class="quick-commands">
+            <div class="command-card"><i class="bi bi-box-arrow-in-right"></i><div class="command-title lang-ru">Войти</div><div class="command-title lang-en">Login</div><div class="command-location lang-ru">Главный экран → левая колонка</div><div class="command-location lang-en">Main screen → left column</div></div>
+            <div class="command-card"><i class="bi bi-person-plus"></i><div class="command-title lang-ru">Регистрация</div><div class="command-title lang-en">Register</div><div class="command-location lang-ru">Главный экран → правая колонка</div><div class="command-location lang-en">Main screen → right column</div></div>
+            <div class="command-card"><i class="bi bi-plus-circle"></i><div class="command-title lang-ru">Создать зону</div><div class="command-title lang-en">Create zone</div><div class="command-location lang-ru">ЛК → вкладка «Создать зону»</div><div class="command-location lang-en">Dashboard → “Create zone” tab</div></div>
+            <div class="command-card"><i class="bi bi-qr-code"></i><div class="command-title lang-ru">QR-код</div><div class="command-title lang-en">QR code</div><div class="command-location lang-ru">ЛК → «Мои зоны» → кнопка QR</div><div class="command-location lang-en">Dashboard → “My zones” → QR button</div></div>
+            <div class="command-card"><i class="bi bi-pause-circle"></i><div class="command-title lang-ru">Отключить зону</div><div class="command-title lang-en">Disable zone</div><div class="command-location lang-ru">ЛК → кнопка ⏸️ в карточке</div><div class="command-location lang-en">Dashboard → ⏸️ button on card</div></div>
+            <div class="command-card"><i class="bi bi-box-arrow-right"></i><div class="command-title lang-ru">Выйти</div><div class="command-title lang-en">Logout</div><div class="command-location lang-ru">ЛК → кнопка «Выйти»</div><div class="command-location lang-en">Dashboard → “Logout” button</div></div>
+        </div>
+
+        <!-- FAQ / Frequently Asked Questions -->
+        <h3 class="mt-5 mb-3"><i class="bi bi-question-circle me-2"></i><span class="lang-ru">Частые вопросы</span><span class="lang-en">Frequently Asked Questions</span></h3>
+        <div class="faq-container">
+            <div class="faq-item" onclick="this.classList.toggle('active')">
+                <div class="faq-question"><span class="lang-ru">📧 Не приходит письмо с подтверждением email?</span><span class="lang-en">📧 Didn't receive the email verification?</span> <i class="bi bi-chevron-down"></i></div>
+                <div class="faq-answer"><span class="lang-ru">Проверьте папку «Спам» или «Promotions». Подождите 2-3 минуты. Убедитесь, что ввели верный email. Если письмо не пришло — попробуйте зарегистрироваться с другим email или запросите повторную отправку через Firebase.</span><span class="lang-en">Check your Spam or Promotions folder. Wait 2-3 minutes. Make sure you entered the correct email. If the email hasn't arrived — try registering with a different email or request a resend via Firebase.</span></div>
+            </div>
+            <div class="faq-item" onclick="this.classList.toggle('active')">
+                <div class="faq-question"><span class="lang-ru">📍 Геолокация не работает / низкая точность?</span><span class="lang-en">📍 Geolocation not working / low accuracy?</span> <i class="bi bi-chevron-down"></i></div>
+                <div class="faq-answer"><span class="lang-ru">На смартфоне: включите GPS и разрешите доступ к геолокации в браузере. На компьютере: разрешите доступ в настройках браузера (значок замка в адресной строке). Для лучшей точности используйте мобильное устройство с GPS на открытом пространстве.</span><span class="lang-en">On smartphone: enable GPS and allow geolocation access in your browser. On computer: allow access in browser settings (padlock icon in address bar). For better accuracy, use a mobile device with GPS in an open area.</span></div>
+            </div>
+            <div class="faq-item" onclick="this.classList.toggle('active')">
+                <div class="faq-question"><span class="lang-ru">📍 Пользователь говорит, что на месте, но проверка не проходит?</span><span class="lang-en">📍 User claims to be at the location but verification fails?</span> <i class="bi bi-chevron-down"></i></div>
+                <div class="faq-answer"><span class="lang-ru">Возможные причины: радиус зоны слишком маленький (увеличьте до 50-100 м), координаты зоны указаны неточно (проверьте на карте), у пользователя низкая точность GPS (в помещении или облачная погода), пользователь запретил геолокацию в браузере.</span><span class="lang-en">Possible reasons: zone radius is too small (increase to 50-100 m), zone coordinates are inaccurate (check on map), user has low GPS accuracy (indoors or cloudy weather), user denied geolocation in browser.</span></div>
+            </div>
+            <div class="faq-item" onclick="this.classList.toggle('active')">
+                <div class="faq-question"><span class="lang-ru">🔒 Безопасно ли хранить данные?</span><span class="lang-en">🔒 Is it safe to store data?</span> <i class="bi bi-chevron-down"></i></div>
+                <div class="faq-answer"><span class="lang-ru">Да, все данные хранятся в защищенной Firebase (Google). Пароли шифруются и не передаются в открытом виде. Используется HTTPS-соединение. Сервис соответствует базовым стандартам безопасности веб-приложений.</span><span class="lang-en">Yes, all data is stored in secure Firebase (Google). Passwords are encrypted and never transmitted in plain text. HTTPS connection is used. The service meets basic web application security standards.</span></div>
+            </div>
+            <div class="faq-item" onclick="this.classList.toggle('active')">
+                <div class="faq-question"><span class="lang-ru">📊 Как просмотреть статистику по зоне?</span><span class="lang-en">📊 How to view zone statistics?</span> <i class="bi bi-chevron-down"></i></div>
+                <div class="faq-answer"><span class="lang-ru">Статистика отображается в карточке каждой зоны в разделе «Мои зоны»: 👁️ Visits — количество переходов по ссылке, ✓ Successful checks — количество успешных гео-проверок. Данные обновляются в реальном времени.</span><span class="lang-en">Statistics are displayed on each zone card in the “My zones” section: 👁️ Visits — number of link opens, ✓ Successful checks — number of successful geo-verifications. Data updates in real time.</span></div>
+            </div>
+            <div class="faq-item" onclick="this.classList.toggle('active')">
+                <div class="faq-question"><span class="lang-ru">🔁 Можно ли восстановить удаленную зону?</span><span class="lang-en">🔁 Can I restore a deleted zone?</span> <i class="bi bi-chevron-down"></i></div>
+                <div class="faq-answer"><span class="lang-ru">Нет, удаление зоны безвозвратно. Данные о посещениях и успешных проверках также теряются. Рекомендуем вместо удаления использовать кнопку «Отключить» (⏸️) — зона станет недоступной для пользователей, но все данные сохранятся, и вы сможете включить её позже.</span><span class="lang-en">No, zone deletion is permanent. Visit and success data is also lost. Instead of deleting, use the “Disable” button (⏸️) — the zone will be unavailable to users, but all data will be preserved, and you can re-enable it later.</span></div>
+            </div>
+            <div class="faq-item" onclick="this.classList.toggle('active')">
+                <div class="faq-question"><span class="lang-ru">🌐 Какой радиус лучше выбрать?</span><span class="lang-en">🌐 What radius should I choose?</span> <i class="bi bi-chevron-down"></i></div>
+                <div class="faq-answer"><span class="lang-ru">Для входа в здание достаточно 20-50 метров. Для парковки или открытой территории — 100-200 метров. Для больших мероприятий (фестиваль, стадион) — 300-500 метров. Не делайте радиус слишком маленьким (менее 10 м) — GPS может ошибаться на 15-20 метров.</span><span class="lang-en">For building entrance: 20-50 meters is enough. For parking lots or open areas: 100-200 meters. For large events (festival, stadium): 300-500 meters. Don't make the radius too small (less than 10 m) — GPS can be off by 15-20 meters.</span></div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <hr class="my-5">
+        <div class="text-center text-muted">
+            <p><i class="bi bi-geo-alt-fill"></i> <span class="lang-ru">Гео-шлюз — гео-привязанные ссылки для регистрации</span><span class="lang-en">Geo-Gate — geo-linked access for registration</span></p>
+            <p class="small">© 2024 | <span class="lang-ru">Версия 2.0</span><span class="lang-en">Version 2.0</span></p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Переключение языка
+document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const lang = this.getAttribute('data-lang-value');
+        document.body.setAttribute('data-lang', lang);
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+    });
+});
+
+// FAQ анимация
+document.querySelectorAll('.faq-item').forEach(item => {
+    item.addEventListener('click', function() {
+        this.classList.toggle('active');
+    });
+});
+</script>
+</body>
+</html>
